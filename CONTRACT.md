@@ -11,19 +11,26 @@ Keep it short and specific. Point at methods, call sites, and error text.
 
 ### Prediction (write this before you run the build, and you can deliberate with your agent)
 
-**Will the consumer, untouched, still compile and pass?** Yes or no.
+**Will the consumer, untouched, still compile and pass?** Yes.
 
 **Why.** What does the compiler do with the consumer's existing call sites once
-the new overload exists?
+the new overload exists? The compiler binds method calls to signatures at compile time based on the method name and parameter types. The new overload `createBooking(..., String notes)` is a separate method signature. The original `createBooking` signature remains unchanged, so existing calls to it will continue to resolve to the old signature and compile perfectly.
 
 ### What happened
 
 **The result.** What the build printed for each module.
+```
+[INFO] lab06-booking-parent ............................... SUCCESS [  1.010 s]
+[INFO] lab06-api .......................................... SUCCESS [  2.457 s]
+[INFO] lab06-consumer ..................................... SUCCESS [  0.306 s]
+```
 
 **If your prediction was wrong,** say what you missed.
+N/A (Prediction was correct).
 
 **Is an additive change always safe in Java?** One case where adding something
 to an API still breaks a caller, if you can name one.
+No, an additive change is not always safe. If we added a new method to `BookingApi`, any consumer that *implements* `BookingApi` would fail to compile because it wouldn't have the new method implemented. Another case: if a consumer passes `null` as an argument to an existing method and we add an overload that accepts a different type at that position, the consumer's call might become ambiguous, causing a compilation error.
 
 ---
 
