@@ -57,25 +57,34 @@ public interface BookingApi {
      * @throws IllegalArgumentException if {@code roomId} is null or
      *         {@code endMinute} is not greater than {@code startMinute}
      */
-    Booking createBooking(String roomId, long startMinute, long endMinute,
-                          String waitlistKey);
+    /**
+     * @deprecated Use {@link #createBooking(BookingRequest)} instead.
+     */
+    @Deprecated
+    default Booking createBooking(String roomId, long startMinute, long endMinute,
+                          String waitlistKey) {
+        return createBooking(new BookingRequest(roomId, startMinute, endMinute, waitlistKey, null));
+    }
 
     /**
-     * Books a room with notes.
+     * @deprecated Use {@link #createBooking(BookingRequest)} instead.
+     */
+    @Deprecated
+    default Booking createBooking(String roomId, long startMinute, long endMinute,
+                          String waitlistKey, String notes) {
+        return createBooking(new BookingRequest(roomId, startMinute, endMinute, waitlistKey, notes));
+    }
+
+    /**
+     * Books a room using a request object.
      *
-     * @param roomId      the room to book, non-null
-     * @param startMinute first minute of the booking, inclusive
-     * @param endMinute   first minute after the booking, exclusive; must be
-     *                    greater than {@code startMinute}
-     * @param waitlistKey caller's waitlist key, or null to decline waitlisting
-     * @param notes       optional notes for the booking
+     * @param request the booking request
      * @return the CONFIRMED booking, the WAITLISTED booking, or null when the
      *         range conflicts and no waitlist key was given
-     * @throws IllegalArgumentException if {@code roomId} is null or
-     *         {@code endMinute} is not greater than {@code startMinute}
+     * @throws IllegalArgumentException if {@code request.getRoomId()} is null or
+     *         {@code request.getEndMinute()} is not greater than {@code request.getStartMinute()}
      */
-    Booking createBooking(String roomId, long startMinute, long endMinute,
-                          String waitlistKey, String notes);
+    Booking createBooking(BookingRequest request);
 
     /**
      * Returns every non-cancelled booking for one room, ordered by start minute.

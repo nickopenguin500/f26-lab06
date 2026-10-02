@@ -38,34 +38,56 @@ No, an additive change is not always safe. If we added a new method to `BookingA
 
 ### Prediction (write this before you run the build)
 
-**Will the untouched consumer still compile and pass?** Yes or no, and if no,
-which module goes red and whether at compile time or test time.
+**Will the untouched consumer still compile and pass?** No, the `consumer` module will fail at compile time.
 
-**Where.** Name the call sites you expect to be affected, if any.
+**Where.** `FrontDesk.java` calls `api.createBooking(...)` at lines 27 and 33. These call sites will fail to compile because the methods they rely on have been removed from `BookingApi`.
 
-**What about the tests in `api/`, after you update them?** And whether their
-result is evidence about the consumer.
+**What about the tests in `api/`, after you update them?** The tests in `api/` will compile and pass because we will update them to use the new `BookingRequest` object. Their passing is not evidence about the consumer, because the tests are updated in sync with the API, whereas the consumer code remains on the old version.
 
 ### Step 1: after the fold
 
 **What the build printed.** Paste it for each module, including file and
 line for anything that failed.
+```
+[INFO] lab06-booking-parent ............................... SUCCESS [  0.068 s]
+[INFO] lab06-api .......................................... SUCCESS [  0.880 s]
+[INFO] lab06-consumer ..................................... FAILURE [  0.037 s]
+
+[ERROR] /Users/nickopenguin500/Documents/GitHub/f26-lab06/consumer/src/main/java/edu/cmu/cs214/frontdesk/FrontDesk.java:[27,19] method createBooking in interface edu.cmu.cs214.booking.BookingApi cannot be applied to given types;
+  required: edu.cmu.cs214.booking.BookingRequest
+  found:    java.lang.String,long,long,<nulltype>
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/nickopenguin500/Documents/GitHub/f26-lab06/consumer/src/main/java/edu/cmu/cs214/frontdesk/FrontDesk.java:[33,19] method createBooking in interface edu.cmu.cs214.booking.BookingApi cannot be applied to given types;
+  required: edu.cmu.cs214.booking.BookingRequest
+  found:    java.lang.String,long,long,java.lang.String
+  reason: actual and formal argument lists differ in length
+```
 
 **Which module's tests ran, and which did not.** And what that tells you about
 who can detect a contract break.
+The tests in `lab06-api` ran successfully. The tests in `lab06-consumer` did not run because the module failed to compile. This tells us that the API team's own tests cannot detect a contract break because they are updated alongside the API itself. Only the consumer's compiler (and tests) can detect that the contract was broken.
 
 ### Step 2: the deprecation path
 
 **What you added.** The signatures that came back, and what they delegate to.
+We brought back:
+1. `Booking createBooking(String roomId, long startMinute, long endMinute, String waitlistKey)`
+2. `Booking createBooking(String roomId, long startMinute, long endMinute, String waitlistKey, String notes)`
+Both were marked with `@Deprecated` and now construct a `new BookingRequest(...)` using their parameters, then delegate to the new `createBooking(BookingRequest)` method.
 
 **The warnings.** Paste one deprecation warning line from the build log (from
 a `mvn -B clean test` run, since a rerun with nothing to compile prints none).
+```
+[WARNING] /Users/nickopenguin500/Documents/GitHub/f26-lab06/consumer/src/main/java/edu/cmu/cs214/frontdesk/FrontDesk.java:[27,19] createBooking(java.lang.String,long,long,java.lang.String) in edu.cmu.cs214.booking.BookingApi has been deprecated
+```
 
 **What the deprecation path resolves.** Who can now build that could not build
 during step 1, and who is on which schedule.
+The consumer can now build perfectly, which it couldn't during step 1. This decoupling allows the API team to ship the new `BookingRequest` surface immediately, while the consumer team can migrate their calls to the new method on their own schedule before the old one is eventually removed.
 
 **What the warnings accomplish that a README note would not.** Be concrete
 about where the warning shows up and who sees it without looking for it.
+The warnings show up directly in the consumer's compiler output and their IDE (as crossed-out method names or yellow squiggles) exactly at the lines of code where they call the deprecated methods. The consumer team sees these warnings natively while doing their own work, without ever having to look at the API team's README or external documentation.
 
 ---
 

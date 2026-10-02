@@ -11,30 +11,23 @@ public class InMemoryBookingService implements BookingApi {
     private long nextId = 1;
 
     @Override
-    public Booking createBooking(String roomId, long startMinute, long endMinute,
-                                 String waitlistKey) {
-        return createBooking(roomId, startMinute, endMinute, waitlistKey, null);
-    }
-
-    @Override
-    public Booking createBooking(String roomId, long startMinute, long endMinute,
-                                 String waitlistKey, String notes) {
-        if (roomId == null) {
+    public Booking createBooking(BookingRequest request) {
+        if (request.getRoomId() == null) {
             throw new IllegalArgumentException("roomId must not be null");
         }
-        if (endMinute <= startMinute) {
+        if (request.getEndMinute() <= request.getStartMinute()) {
             throw new IllegalArgumentException(
                     "endMinute must be greater than startMinute");
         }
 
-        boolean conflict = hasConfirmedConflict(roomId, startMinute, endMinute);
-        if (conflict && waitlistKey == null) {
+        boolean conflict = hasConfirmedConflict(request.getRoomId(), request.getStartMinute(), request.getEndMinute());
+        if (conflict && request.getWaitlistKey() == null) {
             return null;
         }
 
         BookingStatus status = conflict ? BookingStatus.WAITLISTED : BookingStatus.CONFIRMED;
-        Booking booking = new Booking(nextId++, roomId, startMinute, endMinute,
-                status, waitlistKey, notes);
+        Booking booking = new Booking(nextId++, request.getRoomId(), request.getStartMinute(), request.getEndMinute(),
+                status, request.getWaitlistKey(), request.getNotes());
         bookings.add(booking);
         return booking;
     }
