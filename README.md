@@ -1,4 +1,5 @@
 # Lab 6 Starter: Booking API and a Consumer You Do Not Own
+Models/Tools: Antigravity, Gemini Pro
 
 Two Maven modules in one repo. `api/` is a room booking API you maintain.
 `consumer/` is a walk-in front desk app built on top of it by another team.
